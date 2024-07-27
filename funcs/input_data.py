@@ -19,6 +19,7 @@ def input_data(attendance_data,employee_master,holidays_date):
             attendance_data_df.columns = attendance_data_df.columns.str.lower()
             attendance_data_df["tanggal"] = pd.to_datetime(attendance_data_df["tanggal"])
             attendance_data_df['tanggal'] = attendance_data_df['tanggal'].dt.strftime('%Y-%m-%d')
+            attendance_data_df['nik'] = attendance_data_df['nik'].astype(str)
            
             st.write(attendance_data_df)
     else:
@@ -40,6 +41,7 @@ def input_data(attendance_data,employee_master,holidays_date):
                     how="inner",
                 )
         employee_master_df = employee_master_df.drop(columns=['tax_status'])
+        employee_master_df['nik'] = employee_master_df['nik'].astype('str')
 
 
         employee_master_df.to_csv("temp_data/temp_employee_master.csv", index=None)

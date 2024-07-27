@@ -60,7 +60,7 @@ if login():
             # Generate Jam Kerja
             working_hours_df = working_hours_calc(attendance_data_df,holidays_date_df,start_date, end_date)
 
-            st.markdown("#### Output Total Jam Kerja")
+            st.markdown("#### Rincian Total Jam Kerja")
             st.dataframe(working_hours_df,use_container_width=True)
             
             # Slip bayangan
@@ -68,11 +68,15 @@ if login():
             slip_bayangan_df.columns = ['nik','nama','tanggal','jam_mulai','jam_akhir','total_jam']
             slip_bayangan_df.to_csv("temp_data/temp_slip_bayangan.csv",index=None)
             
+
+
+            st.markdown("#### Rincian Gaji")           
+            tmp_salary_df = salary_calc(working_hours_df,employee_master_df)
+            tmp_salary_df
             
+        # ter_mapping_detail_df = tax_calc()
 
-        ter_mapping_detail_df = tax_calc()
-
-        ter_mapping_detail_df
+        # ter_mapping_detail_df
 
         
 
