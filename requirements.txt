@@ -1,0 +1,6 @@
+xlrd
+openpyxl
+streamlit
+pandas
+datetime
+streamlit-aggrid==0.3.4
