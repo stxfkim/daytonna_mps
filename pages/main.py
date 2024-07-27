@@ -72,6 +72,9 @@ if login():
 
             st.markdown("#### Rincian Gaji")           
             tmp_salary_df = salary_calc(working_hours_df,employee_master_df)
+            
+            
+            
             tmp_salary_df
             
         # ter_mapping_detail_df = tax_calc()

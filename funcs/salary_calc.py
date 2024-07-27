@@ -9,6 +9,7 @@ from openpyxl.styles.alignment import Alignment
 import streamlit as st
 from pathlib import Path
 import zipfile
+from funcs.tax_calc import tax_calc
 
 #from functions import *
 
@@ -84,5 +85,18 @@ def salary_calc(working_hours_df,employee_master_df):
     tmp_salary_df = tmp_salary_df.drop(
             columns=["nik_tmp"]
         ) 
-    salary_df = bpjstk_deduction_calc(tmp_salary_df)
-    return salary_df
+    
+
+    tmp_salary_df['gross_salary'] = tmp_salary_df['monthly_billable_salary']+tmp_salary_df['monthly_meal_allowance']
+    
+    tmp_salary_df = bpjstk_deduction_calc(tmp_salary_df)
+
+    tmp_salary_df['tax_percentage'] = tmp_salary_df['gross_salary'].apply(lambda x: tax_calc(x))
+
+    # lanjut 
+    # hitung tax_deduction amount (gross_salary*tax_percentage)
+    tmp_salary_df['tax_deduction'] = (tmp_salary_df['gross_salary']*tmp_salary_df['tax_percentage']).round(0)
+    # hitung net_salary (gross_salary-(bpjstk_deduction+tax_deduction))
+    tmp_salary_df['net_salary'] = tmp_salary_df['gross_salary']-(tmp_salary_df['bpjstk_deduction']+tmp_salary_df['tax_deduction'])
+    
+    return tmp_salary_df
