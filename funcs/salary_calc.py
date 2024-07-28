@@ -48,12 +48,18 @@ def salary_calc(working_hours_df,employee_master_df):
     tmp_salary_df['billable_salary'] = tmp_salary_df['billable_hours']*tmp_salary_df['basic_salary']
     
     #agregat monthly uang makan
+    tmp_salary_df['billable_meal_allowance'] = tmp_salary_df.apply(
+        lambda row: row['uang_makan'] if row['billable_hours'] > 0 else 0,
+        axis=1
+    )
+
+    # Aggregate the 'billable_meal_allowance' by 'nik'
     tmp_monthly_meal_allowance = (
-            tmp_salary_df.groupby("nik")
-            .agg({"uang_makan": "sum"})
-            .rename(columns={"uang_makan": "monthly_meal_allowance"})
-            .reset_index()
-        )
+        tmp_salary_df.groupby("nik")
+        .agg({"billable_meal_allowance": "sum"})
+        .rename(columns={"billable_meal_allowance": "monthly_meal_allowance"})
+        .reset_index()
+    )    
     tmp_monthly_meal_allowance.columns = ['nik_tmp','monthly_meal_allowance']
 
     #agregat monthly salary from total daily salary
