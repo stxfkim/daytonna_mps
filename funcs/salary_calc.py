@@ -20,7 +20,7 @@ def bpjstk_deduction_calc(df):
         lambda x: 0 if x <= 1000000 else
                   40000 if x <= 3000000 else
                   62000 if x <= 5000000 else
-                  90000
+                  90010
     )
     return df
     
@@ -49,7 +49,7 @@ def salary_calc(working_hours_df,employee_master_df):
     
     #agregat monthly uang makan
     tmp_salary_df['billable_meal_allowance'] = tmp_salary_df.apply(
-        lambda row: row['uang_makan'] if row['billable_hours'] > 0 else 0,
+        lambda row: row['uang_makan'] if row['billable_hours'] >= 5 else 0,
         axis=1
     )
 

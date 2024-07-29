@@ -73,7 +73,7 @@ def billable_hours_calc(row):
             return 5 + 1 * 1.5 + (row['total_working_hours'] - 6) * 2
     elif row['day'] == 'Minggu' or row['is_holiday'] == 'Y':  # Minggu & Libur
         # 7 jam pertama 2x
-        if row['total_working_hours'] <= 7:
+        if row['total_working_hours'] <= 7.5:
             return row['total_working_hours'] * 2
         # 1 jam berikutnya 3x
         elif row['total_working_hours'] <= 8:
