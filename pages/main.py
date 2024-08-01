@@ -17,6 +17,8 @@ from funcs.login import login
 from funcs.salary_calc import salary_calc
 from funcs.working_hours_calc import working_hours_calc
 from funcs.tax_calc import tax_calc
+from funcs.gen_payslip import generate_payslip
+from funcs.utils import *
 
 warnings.filterwarnings("ignore")
 from openpyxl import load_workbook
@@ -46,14 +48,40 @@ if login():
 
     with salary_calc_tab:
 
-        is_attendance_empty =  (lambda x: True if x is None else x.empty)(attendance_data_df)
-        if is_attendance_empty: st.warning("Data Absensi belum di-upload",icon="⚠️")
-        btnSalaryCalc = st.button(
-                "Hitung Gaji", help="klik tombol untuk hitung gaji",
-                type="primary", disabled=is_attendance_empty
-            )
+        # is_attendance_empty =  (lambda x: True if x is None else x.empty)(attendance_data_df)
+        # if is_attendance_empty: st.warning("Data Absensi belum di-upload",icon="⚠️")
+        # btnSalaryCalc = st.button(
+        #         "Hitung Gaji", help="klik tombol untuk hitung gaji",
+        #         type="primary", disabled=is_attendance_empty
+        #     )
         
-
+        col_btnSalaryCalc, col_btnDownloadReport = st.columns(2)
+        with col_btnSalaryCalc:
+            is_attendance_empty =  (lambda x: True if x is None else x.empty)(attendance_data_df)
+            if is_attendance_empty: st.warning("Data Absensi belum di-upload",icon="⚠️")
+            btnSalaryCalc = st.button(
+                    "Hitung Gaji", help="klik tombol untuk hitung gaji",
+                    type="primary", disabled=is_attendance_empty
+                )
+        with col_btnDownloadReport:
+                    
+                    periode = get_periode(start_date,end_date)
+                    filename = "report"+periode.replace(" ", "_")+".zip"
+                    zip_filename = zipper(file_list,filename)
+                    file_path = Path('output/slipgaji_'+filename+".xlsx")
+                    zip_file = zipper
+                    
+                    my_file = Path(report_file)
+                    if my_file.is_file():
+                        with open(report_file,"rb",
+                        ) as fp:
+                            btn = st.download_button(
+                                label="Download Slip Gaji",
+                                data=fp,
+                                file_name="report_file.zip",
+                                mime="application/zip",
+                            )
+        
         working_hours_df = None
         if btnSalaryCalc:
             
@@ -70,12 +98,21 @@ if login():
             
 
 
-            st.markdown("#### Rincian Gaji")           
-            tmp_salary_df = salary_calc(working_hours_df,employee_master_df)
+            #generate data gaji         
+            detail_salary_df,summary_salary_df = salary_calc(working_hours_df,employee_master_df)
+
+            st.markdown("#### Summary Gaji")  
+            summary_salary_df            
+            
+            st.markdown("#### Detail Gaji")  
+            detail_salary_df
             
             
+            # generate payslips
+            periode = get_periode(start_date,end_date)
+            file_output = generate_payslip(working_hours_df,summary_salary_df,periode)
             
-            tmp_salary_df
+        
             
         # ter_mapping_detail_df = tax_calc()
 
