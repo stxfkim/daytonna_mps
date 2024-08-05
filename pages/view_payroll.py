@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-
+from fpdf import FPDF
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(
@@ -51,11 +51,28 @@ if search_query:
             for english, indonesian in indonesian_months.items():
                 min_date = min_date.replace(english, indonesian)
                 max_date = max_date.replace(english, indonesian)
-            #st.write("Nomor Induk Karyawan              : ", nik)
-            st.write(f"Nomor Induk Karyawan :  **{str(nik)}**")
-            st.write(f"Nama :  **{str(nama)}**")
-            st.write(f"Periode :  **{str(min_date)}** - **{str(max_date)}**")
-            st.write(f"Total Jam Kerja :  **{str(total_jam_kerja)}**")
+            
+            nik_str = f"Nomor Induk Karyawan :  **{str(nik)}**"
+            nama_str = f"Nama :  **{str(nama)}**"     
+            periode_str = f"Periode :  **{str(min_date)}** - **{str(max_date)}**"    
+            total_jam_kerja_str = f"Total Jam Kerja :  **{str(total_jam_kerja)}**"
+            
+            # pdf = FPDF()
+            # pdf.add_page()
+            # pdf.set_font("Arial", size = 25) 
+  
+            # # create a cell 
+            # pdf.cell(200, 10, txt = "Slip Gaji Bayangan", 
+            #         ln = 1, align = 'C') 
+            
+            # pdf.set_font("Arial", size = 15)
+            # pdf.cell(200, 10, txt = "PT. Daytonna Niaga Adhya", 
+            #         ln = 2, align = 'C') 
+                
+            st.write(nik_str)
+            st.write(nama_str)
+            st.write(periode_str)
+            st.write(total_jam_kerja_str)
          
             st.dataframe(df_show.set_index(df_show.columns[0]),height=1120,width=500)
         else:

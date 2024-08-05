@@ -20,7 +20,7 @@ def sidebar_menu():
         if attendance_data is not None:
             attendance_data_df = pd.read_excel(attendance_data,engine='xlrd', dtype={"nik": str})
             attendance_data_df.columns = attendance_data_df.columns.str.lower()
-            attendance_data_df['tanggal'] = pd.to_datetime(attendance_data_df['tanggal']).dt.date
+            attendance_data_df['tanggal'] = pd.to_datetime(attendance_data_df['tanggal'],format='%d/%m/%Y').dt.date
 
             min_date = attendance_data_df['tanggal'].min()
             max_date = attendance_data_df['tanggal'].max()

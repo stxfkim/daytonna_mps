@@ -92,7 +92,7 @@ def working_hours_calc(attendance_data_df,holidays_date_df,start_date, end_date)
         # attendance_data_df = attendance_data_df[attendance_data_df["tanggal"].between(start_date, end_date)]
         
 
-        attendance_data_df['tanggal'] = pd.to_datetime(attendance_data_df['tanggal']).dt.date
+        attendance_data_df['tanggal'] = pd.to_datetime(attendance_data_df['tanggal'],format='%d/%m/%Y').dt.date
 
         attendance_data_df = attendance_data_df[
                     attendance_data_df["tanggal"].between(start_date, end_date)

@@ -17,8 +17,8 @@ def input_data(attendance_data,employee_master,holidays_date):
     if attendance_data is not None:
             attendance_data_df = pd.read_excel(attendance_data,engine='xlrd', dtype={"nik": str})
             attendance_data_df.columns = attendance_data_df.columns.str.lower()
-            attendance_data_df["tanggal"] = pd.to_datetime(attendance_data_df["tanggal"])
-            attendance_data_df['tanggal'] = attendance_data_df['tanggal'].dt.strftime('%Y-%m-%d')
+            attendance_data_df["tanggal"] = pd.to_datetime(attendance_data_df["tanggal"],format='%d/%m/%Y')
+            attendance_data_df['tanggal'] = attendance_data_df['tanggal'].dt.strftime('%d/%m/%Y')
             attendance_data_df['nik'] = attendance_data_df['nik'].astype(str)
            
             st.write(attendance_data_df)

@@ -28,7 +28,7 @@ def salary_calc(attendance_data_df, start_date, end_date):
         if btnHitungGaji:
             with st.spinner("Loading...."):
                 attendance_data_df["Tanggal"] = pd.to_datetime(
-                    attendance_data_df["Tanggal"], format="%d-%m-%Y"
+                    attendance_data_df["Tanggal"], format='%d/%m/%Y'
                 )
                 attendance_data_df["Tanggal"] = attendance_data_df["Tanggal"].dt.date
                 filtered_attendance_df = attendance_data_df[

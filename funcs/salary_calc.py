@@ -177,7 +177,7 @@ def salary_calc(working_hours_df,employee_master_df):
 
 
     # Drop duplicates based on 'nik' and keep the first occurrence
-    summary_salary_df = tmp_salary_df.drop_duplicates(subset='nik')
+    summary_salary_df = tmp_salary_df.drop_duplicates(subset='nik').reset_index(drop=True)
     
     
     

@@ -4,7 +4,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import openpyxl
 import calendar
 
-d
+
 # Generate dates for July 2024
 dates = pd.date_range(start="2024-07-01", end="2024-07-31", freq='D')
 
