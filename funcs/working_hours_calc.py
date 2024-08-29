@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from datetime import date
 import warnings
@@ -6,6 +7,83 @@ warnings.filterwarnings('ignore')
 import streamlit as st
 from pathlib import Path
 
+
+def billable_hours_rounding(row):
+    if pd.isna(row['billable_hours']):  # Check if the value is NaN
+        return 0
+    else:
+        return np.floor(row['billable_hours']) + (0.5 if row['billable_hours'] % 1 >= 0.5 else 0.0)
+
+def adjust_jam_mulai(row):
+        # Extract hour and minute from 'jam_mulai_real'
+    hour = row['jam_mulai_real'].hour
+    minute = row['jam_mulai_real'].minute
+    
+    
+        
+        # Conditions for 's.helper' or 'store helper'
+    if row['jabatan'].lower() in ['s.helper', 'store helper', 'store']:
+        if (hour == 7 and minute == 0) or hour < 7 and row['jam_mulai_real'].strftime("%H:%M:%S") != '00:00:00':
+            return pd.Timestamp('07:00').time()
+    else:
+        # Conditions for other jobs
+        if (hour == 7 and minute <= 35) or hour < 7 and row['jam_mulai_real'].strftime("%H:%M:%S") != '00:00:00':
+            return pd.Timestamp('07:30').time()
+    
+    # Default to jam_mulai_real if no condition matches
+    return row['jam_mulai_real']
+
+
+def adjust_jam_akhir(time_str):
+    """Replace minutes based on the given conditions."""
+    # Split the time into hours and minutes
+    hours, mins = time_str.split(':')
+    mins = int(mins)
+    
+    # Adjust minutes based on the condition
+    if 1 <= mins <= 29:
+        return f'{hours}:00'
+    elif 30 <= mins <= 59:
+        return f'{hours}:30'
+    else:
+        return time_str
+
+def time_adjustment(attendance_data_df,employee_master_df):
+    
+    att_data = attendance_data_df[['nik','nama','tanggal','jam_mulai','jam_akhir']]
+    att_data.columns = ['nik','nama','tanggal','jam_mulai_real','jam_akhir_real']
+    
+    emp_data = employee_master_df[['nik','jabatan']]
+    emp_data.columns = ['nik_emp','jabatan']
+    
+     
+    att_data_final = att_data.merge(
+            emp_data,
+            left_on='nik',
+            right_on='nik_emp',
+            how='inner'
+        )
+    
+    #drop table yg engga perlu
+    att_data_final = att_data_final.drop(
+            columns=['nik_emp']
+        )
+    
+    att_data_final['jam_mulai_real'] = pd.to_datetime(att_data_final['jam_mulai_real'], format='%H:%M').dt.time
+    
+    
+    att_data_final['jam_mulai'] = att_data_final.apply(adjust_jam_mulai, axis=1)
+
+    att_data_final['jam_akhir'] = att_data_final['jam_akhir_real'].apply(adjust_jam_akhir)   
+
+    att_data_final['jam_mulai'] = att_data_final['jam_mulai'].apply(lambda x: x.strftime('%H:%M'))
+    #att_data_final['jam_akhir'] = att_data_final['jam_akhir'].apply(lambda x: x.strftime('%H:%M'))
+    att_data_final['jam_mulai_real'] = att_data_final['jam_mulai_real'].apply(lambda x: x.strftime('%H:%M'))
+    #att_data_final['jam_akhir_real'] = att_data_final['jam_akhir_real'].apply(lambda x: x.strftime('%H:%M'))
+
+
+    return att_data_final
+    
 
 def breaks_hours(row):
     normal_break = pd.Timedelta(hours=1)
@@ -84,7 +162,7 @@ def billable_hours_calc(row):
        
 
 
-def working_hours_calc(attendance_data_df,holidays_date_df,start_date, end_date): # attendance_data_df, start_date, end_date
+def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,start_date, end_date): # attendance_data_df, start_date, end_date
     
     if attendance_data_df is None:
         st.warning("Data Absensi belum di-upload", icon="⚠️")
@@ -100,13 +178,13 @@ def working_hours_calc(attendance_data_df,holidays_date_df,start_date, end_date)
         
         # attendance_data_df 
         # Function to round down to the nearest 10 minutes
-        def round_down_to_10min(dt):
-            return dt - pd.to_timedelta(dt.minute % 10, unit='minutes')
-        attendance_data_df['jam_mulai'] = pd.to_datetime(attendance_data_df['jam_mulai'], format='%H:%M')
-        attendance_data_df['jam_akhir'] = pd.to_datetime(attendance_data_df['jam_akhir'], format='%H:%M')
-        # Apply the function
-        attendance_data_df['jam_mulai'] = attendance_data_df['jam_mulai'].apply(round_down_to_10min)
-        attendance_data_df['jam_akhir'] = attendance_data_df['jam_akhir'].apply(round_down_to_10min)
+        # def round_down_to_10min(dt):
+        #     return dt - pd.to_timedelta(dt.minute % 10, unit='minutes')
+        # attendance_data_df['jam_mulai'] = pd.to_datetime(attendance_data_df['jam_mulai'], format='%H:%M')
+        # attendance_data_df['jam_akhir'] = pd.to_datetime(attendance_data_df['jam_akhir'], format='%H:%M')
+        # # Apply the function
+        # attendance_data_df['jam_mulai'] = attendance_data_df['jam_mulai'].apply(round_down_to_10min)
+        # attendance_data_df['jam_akhir'] = attendance_data_df['jam_akhir'].apply(round_down_to_10min)
         
         # Convert 'tanggal', 'jam_mulai', and 'jam_akhir' columns to datetime
         attendance_data_df['tanggal'] = pd.to_datetime(attendance_data_df['tanggal'], format='%Y-%m-%d')
@@ -171,16 +249,69 @@ def working_hours_calc(attendance_data_df,holidays_date_df,start_date, end_date)
         # Hitung rate jam normal & jam lembur
         daily_working_hours['billable_hours'] = daily_working_hours.apply(billable_hours_calc, axis=1)
         
+        daily_working_hours['billable_hours'] = daily_working_hours.apply(billable_hours_rounding, axis=1)
+        
         
         # Formatting output data
         daily_working_hours['tanggal'] = daily_working_hours['tanggal'].astype(str)
        # daily_working_hours['jam_mulai'] = pd.to_datetime(daily_working_hours['jam_mulai'], format='%H:%M').dt.time
         #daily_working_hours['jam_akhir'] = pd.to_datetime(daily_working_hours['jam_akhir'], format='%H:%M').dt.time
 
-        working_hours_output_df = daily_working_hours[['nik','nama','tanggal', 'day', 'is_holiday', 
+        
+        # get full name from employee data
+        daily_working_hours = daily_working_hours.drop(
+                columns=['nama']
+            )
+
+        emp_data = employee_master_df[['nik','nama']]
+        emp_data.columns = ['nik_emp','nama']
+        
+        
+        daily_working_hours = daily_working_hours.merge(
+                emp_data,
+                left_on='nik',
+                right_on='nik_emp',
+                how='inner'
+            )
+        
+        #drop table yg engga perlu
+        daily_working_hours = daily_working_hours.drop(
+                columns=['nik_emp']
+            )
+        
+        
+       
+
+        # #get real fingerprint time
+        att_data = attendance_data_df[['nik','tanggal','jam_mulai_real','jam_akhir_real']]
+        att_data.columns = ['nik_tmp','tanggal_tmp','jam_mulai_real','jam_akhir_real']
+        att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
+
+        
+
+        daily_working_hours["tanggal"] = pd.to_datetime(daily_working_hours["tanggal"],format='%Y-%m-%d')
+        daily_working_hours = pd.merge(daily_working_hours,
+                att_data,
+                left_on=['nik','tanggal'],
+                right_on=['nik_tmp','tanggal_tmp'],
+                how='inner'
+            )
+        
+        
+        daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
+        
+        
+        working_hours_output_df = daily_working_hours[['nik','nama','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
                                                        'keterangan_libur','jam_mulai', 'jam_akhir',
                                                        'working_hours','break_hours','total_working_hours'
                                                        ,'billable_hours'
                                                        ]]
+        
+        
+        # working_hours_output_df = daily_working_hours[['nik','nama','tanggal','day', 'is_holiday', 
+        #                                                'keterangan_libur','jam_mulai', 'jam_akhir',
+        #                                                'working_hours','break_hours','total_working_hours'
+        #                                                ,'billable_hours'
+        #                                                ]]
         
         return working_hours_output_df

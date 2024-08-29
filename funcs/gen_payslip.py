@@ -15,15 +15,20 @@ def generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode
     working_hours_df['sheet_name'] = working_hours_df['nik'] + "_" +working_hours_df["nama"].replace(
             " ", "_", regex=True)
     
+    working_hours_df['sheet_name'] =working_hours_df['sheet_name'].str.upper()
+    
+    summary_salary_df['sheet_name'] = summary_salary_df['sheet_name'].str.upper()
+    
     working_hours_df['jam_mulai'] = working_hours_df['jam_mulai'].dt.strftime('%H:%M')
     working_hours_df['jam_akhir'] = working_hours_df['jam_akhir'].dt.strftime('%H:%M')
-    
+
     wb = openpyxl.load_workbook(Path('template/template_slipgaji.xlsx'))
     sheetname_list = summary_salary_df['sheet_name'].unique()
     
+    
     filename = periode.replace(" ", "_")
     
-    file_output = Path('output/slipgaji_'+filename+".xlsx")
+    file_output = Path('output/report_'+filename+".xlsx")
     
     for sheetname in sheetname_list:
         #st.write(sheetname)
@@ -149,4 +154,6 @@ def generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode
     
 
     wb.save(file_output)
+    
+    return file_output
     

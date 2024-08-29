@@ -7,6 +7,7 @@ warnings.filterwarnings('ignore')
 import streamlit as st
 from pathlib import Path
 
+
 def input_data(attendance_data,employee_master,holidays_date):
     
     ter_mapping = pd.read_csv('temp_data/ter_mapping.csv')
@@ -15,12 +16,33 @@ def input_data(attendance_data,employee_master,holidays_date):
     # file absensi
     attendance_data_df = None
     if attendance_data is not None:
+            #attendance_data_df = pd.read_excel(attendance_data,engine='xlrd', dtype={"nik": str})
             attendance_data_df = pd.read_excel(attendance_data,engine='xlrd', dtype={"nik": str})
             attendance_data_df.columns = attendance_data_df.columns.str.lower()
             attendance_data_df["tanggal"] = pd.to_datetime(attendance_data_df["tanggal"],format='%d/%m/%Y')
             attendance_data_df['tanggal'] = attendance_data_df['tanggal'].dt.strftime('%d/%m/%Y')
             attendance_data_df['nik'] = attendance_data_df['nik'].astype(str)
-           
+            
+            # Create a date range covering the entire period
+            start_date = pd.to_datetime(attendance_data_df["tanggal"],format='%d/%m/%Y').min()
+            end_date = pd.to_datetime(attendance_data_df["tanggal"],format='%d/%m/%Y').max()
+            all_dates = pd.date_range(start=start_date, end=end_date).to_series(name='tanggal')
+            all_dates = all_dates.dt.strftime('%d/%m/%Y')
+            unique_data = attendance_data_df[['nik', 'nama']].drop_duplicates()
+
+            complete_df = unique_data.merge(all_dates, how='cross')
+
+            
+            # Fill missing Jam_Mulai and Jam_Akhir with '00:00'
+
+            complete_df["tanggal"] = pd.to_datetime(complete_df["tanggal"],format='%d/%m/%Y')
+            complete_df['tanggal'] = complete_df['tanggal'].dt.strftime('%d/%m/%Y')
+            
+            attendance_data_df = pd.merge(complete_df, attendance_data_df, on=['nik', 'nama', 'tanggal'], how='left')
+            attendance_data_df['jam_mulai'].fillna('00:00', inplace=True)
+            attendance_data_df['jam_akhir'].fillna('00:00', inplace=True)
+            
+       
             st.write(attendance_data_df)
     else:
         st.warning("Data Absensi belum di-upload", icon="⚠️")

@@ -5,6 +5,7 @@ from datetime import date
 from pathlib import Path
 import zipfile
 import warnings
+import os
 #from functions import *
 
 st.set_page_config(
@@ -15,7 +16,7 @@ from funcs.input_data import input_data
 from funcs.sidebar_menu import sidebar_menu
 from funcs.login import login
 from funcs.salary_calc import salary_calc
-from funcs.working_hours_calc import working_hours_calc
+from funcs.working_hours_calc import working_hours_calc, time_adjustment
 from funcs.tax_calc import tax_calc
 from funcs.gen_payslip import generate_payslip
 from funcs.utils import *
@@ -45,6 +46,9 @@ if login():
         attendance_data_df, employee_master_df, holidays_date_df = input_data(attendance_data,
                                                                               employee_master,
                                                                               holidays_date)
+        
+
+        
 
     with salary_calc_tab:
 
@@ -57,33 +61,25 @@ if login():
                     "Hitung Gaji", help="klik tombol untuk hitung gaji",
                     type="primary", disabled=is_attendance_empty
                 )
-        # with col_btnDownloadReport:
-                    
-        #             periode = get_periode(start_date,end_date)
-        #             filename = "report"+periode.replace(" ", "_")+".zip"
-        #             zip_filename = zipper(file_list,filename)
-        #             file_path = Path('output/slipgaji_'+filename+".xlsx")
-        #             zip_file = zipper
-                    
-        #             my_file = Path(report_file)
-        #             if my_file.is_file():
-        #                 with open(report_file,"rb",
-        #                 ) as fp:
-        #                     btn = st.download_button(
-        #                         label="Download Slip Gaji",
-        #                         data=fp,
-        #                         file_name="report_file.zip",
-        #                         mime="application/zip",
-        #                     )
-        
+            
+  
+        detail_salary_df = None
+        summary_salary_df = None
         working_hours_df = None
+        file_output = ''
+        periode = None
+        
         if btnSalaryCalc:
+
             
             # Generate Jam Kerja
-            working_hours_df = working_hours_calc(attendance_data_df,holidays_date_df,start_date, end_date)
+            attendance_data_adjusted = time_adjustment(attendance_data_df,employee_master_df)
+        
+            working_hours_df = working_hours_calc(attendance_data_adjusted,holidays_date_df,employee_master_df,start_date, end_date)
 
-            st.markdown("#### Rincian Total Jam Kerja")
-            st.dataframe(working_hours_df,use_container_width=True)
+            st.session_state['working_hours_df'] = working_hours_df
+            # st.markdown("#### Rincian Total Jam Kerja")
+            # st.dataframe(working_hours_df,use_container_width=True)
             
             # Slip bayangan
             slip_bayangan_df = working_hours_df[['nik','nama','tanggal','jam_mulai','jam_akhir','billable_hours']]
@@ -95,30 +91,64 @@ if login():
             #generate data gaji         
             detail_salary_df,summary_salary_df = salary_calc(working_hours_df,employee_master_df)
 
-            st.markdown("#### Summary Gaji")  
-            summary_salary_df            
+
+            # Store the dataframes to display later
+            st.session_state['detail_salary_df'] = detail_salary_df
+            st.session_state['summary_salary_df'] = summary_salary_df
+            # st.markdown("#### Summary Gaji")  
+            # summary_salary_df            
             
-            st.markdown("#### Detail Gaji")  
-            detail_salary_df
+            # st.markdown("#### Detail Gaji")  
+            # detail_salary_df
             
             
-            # generate payslips
+             # generate payslips
             periode = get_periode(start_date,end_date)
-            file_output = generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode)
-            
-        
-            
-        # ter_mapping_detail_df = tax_calc()
+            path_output = generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode)
+            st.session_state['file_output'] = path_output
 
-        # ter_mapping_detail_df
+    # Display the dataframes if they exist
+        if 'working_hours_df' in st.session_state:
+            st.markdown("#### Rincian Total Jam Kerja")
+            st.dataframe(st.session_state['working_hours_df'], use_container_width=True)
+
+        if 'summary_salary_df' in st.session_state:
+            st.markdown("#### Summary Gaji")
+            st.dataframe(st.session_state['summary_salary_df'])
+
+        if 'detail_salary_df' in st.session_state:
+            st.markdown("#### Detail Gaji")
+            st.dataframe(st.session_state['detail_salary_df'])
+
 
         
+        with col_btnDownloadReport:
+            if 'file_output' in st.session_state and os.path.exists(st.session_state['file_output']):
+                periode = get_periode(start_date, end_date)
+                filename = 'report_' + periode.replace(' ', '_') + ".xlsx"
+
+                with open(st.session_state['file_output'], 'rb') as file:
+                    file_data = file.read()
+
+                st.download_button(
+                    label="Download Report",
+                    data=file_data,
+                    file_name=filename,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+
+            
 
 
     with generate_report_tab:
-        st.write("blank")
-        st.__version__
- 
+        btnTest = st.button(
+                    "Hitung Jam", help="klik tombol untuk hitung gaji",
+                    type="primary", disabled=is_attendance_empty
+                )
+        if btnTest:
+            att_data  = time_adjustment(attendance_data_df,employee_master_df)
+    
+            st.dataframe(att_data,use_container_width=True)
 
 font_css = """
     <style>
