@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from fpdf import FPDF
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(

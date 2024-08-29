@@ -9,7 +9,8 @@ import os
 #from functions import *
 
 st.set_page_config(
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    page_title="Mini Payroll System"
 )
 
 from funcs.input_data import input_data
