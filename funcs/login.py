@@ -10,8 +10,8 @@ def login():
         """Form with widgets to collect user information"""
         st.html("<div style='text-align: center'> <H2> Daytonna - Mini Payroll System</H2> </div>")
         with st.form("Credentials"):
-            st.text_input("Username", key="username",value="mimin")
-            st.text_input("Password", type="password", key="password",value="mimin")
+            st.text_input("Username", key="username")
+            st.text_input("Password", type="password", key="password")
             st.form_submit_button("Log in", on_click=password_entered)
 
         col1, col2, col3 = st.columns(3)

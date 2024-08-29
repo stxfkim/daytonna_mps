@@ -36,9 +36,13 @@ if login():
     attendance_data, start_date, end_date, employee_master, holidays_date = sidebar_menu()
     
     # main tabs
-    input_data_tab, salary_calc_tab, generate_report_tab = st.tabs(
-        ["Input Data ", "Hitung Gaji", "Generate Report"]
+    input_data_tab, salary_calc_tab = st.tabs(
+        ["Input Data ", "Hitung Gaji"]
     )
+    
+    # input_data_tab, salary_calc_tab, generate_report_tab = st.tabs(
+    #     ["Input Data ", "Hitung Gaji", "Generate Report"]
+    # )
     
     with input_data_tab:
         st.write("#### Data Absensi")
@@ -140,15 +144,15 @@ if login():
             
 
 
-    with generate_report_tab:
-        btnTest = st.button(
-                    "Hitung Jam", help="klik tombol untuk hitung gaji",
-                    type="primary", disabled=is_attendance_empty
-                )
-        if btnTest:
-            att_data  = time_adjustment(attendance_data_df,employee_master_df)
+    # with generate_report_tab:
+    #     btnTest = st.button(
+    #                 "Hitung Jam", help="klik tombol untuk hitung gaji",
+    #                 type="primary", disabled=is_attendance_empty
+    #             )
+    #     if btnTest:
+    #         att_data  = time_adjustment(attendance_data_df,employee_master_df)
     
-            st.dataframe(att_data,use_container_width=True)
+    #         st.dataframe(att_data,use_container_width=True)
 
 font_css = """
     <style>

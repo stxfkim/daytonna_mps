@@ -281,10 +281,9 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         
         
        
-
         # #get real fingerprint time
-        att_data = attendance_data_df[['nik','tanggal','jam_mulai_real','jam_akhir_real']]
-        att_data.columns = ['nik_tmp','tanggal_tmp','jam_mulai_real','jam_akhir_real']
+        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real']]
+        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real']
         att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
 
         
@@ -301,7 +300,7 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
         
         
-        working_hours_output_df = daily_working_hours[['nik','nama','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
+        working_hours_output_df = daily_working_hours[['nik','nama','jabatan','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
                                                        'keterangan_libur','jam_mulai', 'jam_akhir',
                                                        'working_hours','break_hours','total_working_hours'
                                                        ,'billable_hours'
