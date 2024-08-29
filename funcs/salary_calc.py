@@ -165,6 +165,21 @@ def salary_calc(working_hours_df,employee_master_df):
     detail_salary_df['sheet_name'] = detail_salary_df['nik'] + "_" +detail_salary_df["nama"].replace(
             " ", "_", regex=True)
     
+        
+    project_data = working_hours_df[['nik','tanggal','project']]
+    project_data.columns = ['nik_tmp','tanggal','project']
+    
+     
+    detail_salary_df = detail_salary_df.merge(
+            project_data,
+            left_on=['nik','tanggal'],
+            right_on=['nik_tmp','tanggal'],
+            how='inner'
+        )
+    
+    detail_salary_df = detail_salary_df.drop(
+            columns=['nik_tmp']
+        )
     
     
     summary_salary_columns = [

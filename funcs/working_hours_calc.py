@@ -50,8 +50,8 @@ def adjust_jam_akhir(time_str):
 
 def time_adjustment(attendance_data_df,employee_master_df):
     
-    att_data = attendance_data_df[['nik','nama','tanggal','jam_mulai','jam_akhir']]
-    att_data.columns = ['nik','nama','tanggal','jam_mulai_real','jam_akhir_real']
+    att_data = attendance_data_df[['nik','nama','tanggal','jam_mulai','jam_akhir','project']]
+    att_data.columns = ['nik','nama','tanggal','jam_mulai_real','jam_akhir_real','project']
     
     emp_data = employee_master_df[['nik','jabatan']]
     emp_data.columns = ['nik_emp','jabatan']
@@ -111,6 +111,10 @@ def breaks_hours(row):
         break_end = pd.to_datetime(str(start.date()) + ' 13:30')
         if start <= break_start < end:
             total_breaks += friday_break
+        break_start_overtime = pd.to_datetime(str(start.date()) + ' 18:00')
+        break_end_overtime = pd.to_datetime(str(start.date()) + ' 19:00')
+        if (start <= break_start_overtime < end) and (break_end_overtime < end):
+            total_breaks += normal_break
     
     if row['jam_mulai'].hour >= 18 or row['jam_mulai'].hour < 6:  # Night shift
         night_break_start = pd.to_datetime(str(start.date()) + ' 23:00')
@@ -282,8 +286,8 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         
        
         # #get real fingerprint time
-        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real']]
-        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real']
+        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real','project']]
+        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real','project']
         att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
 
         
@@ -299,8 +303,7 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         
         daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
         
-        
-        working_hours_output_df = daily_working_hours[['nik','nama','jabatan','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
+        working_hours_output_df = daily_working_hours[['nik','nama','jabatan','project','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
                                                        'keterangan_libur','jam_mulai', 'jam_akhir',
                                                        'working_hours','break_hours','total_working_hours'
                                                        ,'billable_hours'

@@ -20,6 +20,7 @@ from funcs.salary_calc import salary_calc
 from funcs.working_hours_calc import working_hours_calc, time_adjustment
 from funcs.tax_calc import tax_calc
 from funcs.gen_payslip import generate_payslip
+from funcs.gen_report import report_by_project
 from funcs.utils import *
 
 warnings.filterwarnings("ignore")
@@ -73,6 +74,7 @@ if login():
         working_hours_df = None
         file_output = ''
         periode = None
+        project_report_df = None
         
         if btnSalaryCalc:
 
@@ -111,6 +113,9 @@ if login():
             periode = get_periode(start_date,end_date)
             path_output = generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode)
             st.session_state['file_output'] = path_output
+            
+            project_report_df = report_by_project(detail_salary_df)
+            st.session_state['project_report_df'] = project_report_df
 
     # Display the dataframes if they exist
         if 'working_hours_df' in st.session_state:
@@ -124,6 +129,10 @@ if login():
         if 'detail_salary_df' in st.session_state:
             st.markdown("#### Detail Gaji")
             st.dataframe(st.session_state['detail_salary_df'])
+            
+        if 'project_report_df' in st.session_state:
+            st.markdown("#### Project Report")
+            st.dataframe(st.session_state['project_report_df'])
 
 
         
