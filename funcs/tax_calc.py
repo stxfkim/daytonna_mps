@@ -10,7 +10,7 @@ import streamlit as st
 from pathlib import Path
 import zipfile
 
-def tax_calc(gross_salary):
+def tax_calc(gross_salary, ter_type):
 
     # ter_mapping_df = pd.DataFrame({
     #     'tax_status': [
@@ -31,7 +31,20 @@ def tax_calc(gross_salary):
 
 
     # Find the row where the gross_salary fits within the salary range
-    match = ter_mapping_detail_df[(ter_mapping_detail_df['min_salary'] <= gross_salary) & (ter_mapping_detail_df['max_salary'] >= gross_salary)]
+    # match = ter_mapping_detail_df[(ter_mapping_detail_df['min_salary'] <= gross_salary) & 
+    #                               (ter_mapping_detail_df['max_salary'] >= gross_salary)]
+    # if not match.empty:
+    #     return match.iloc[0]['ter_percentage']
+    # else:
+    #     return None
+    
+    
+
+    match = ter_mapping_detail_df[
+        (ter_mapping_detail_df['ter_type'] == ter_type) &
+        (ter_mapping_detail_df['min_salary'] <= gross_salary) &
+        (ter_mapping_detail_df['max_salary'] >= gross_salary)
+    ]
     if not match.empty:
         return match.iloc[0]['ter_percentage']
     else:

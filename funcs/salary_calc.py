@@ -154,8 +154,10 @@ def salary_calc(working_hours_df,employee_master_df):
     
     detail_salary_df = bpjstk_deduction_calc(detail_salary_df)
 
-    detail_salary_df['tax_percentage'] = detail_salary_df['gross_salary'].apply(lambda x: tax_calc(x))
-
+    #detail_salary_df['tax_percentage'] = detail_salary_df['gross_salary'].apply(lambda x: tax_calc(x))
+    detail_salary_df['tax_percentage'] = detail_salary_df.apply(
+        lambda row: tax_calc(row['gross_salary'], row['ter_type']), axis=1
+    )
     # lanjut 
     # hitung tax_deduction amount (gross_salary*tax_percentage)
     detail_salary_df['tax_deduction'] = (detail_salary_df['gross_salary']*detail_salary_df['tax_percentage']).round(0)
