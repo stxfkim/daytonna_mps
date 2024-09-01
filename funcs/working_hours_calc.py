@@ -19,8 +19,6 @@ def adjust_jam_mulai(row):
     hour = row['jam_mulai_real'].hour
     minute = row['jam_mulai_real'].minute
     
-    
-        
         # Conditions for 's.helper' or 'store helper'
     if row['jabatan'].lower() in ['s.helper', 'store helper', 'store']:
         if (hour == 7 and minute == 0) or hour < 7 and row['jam_mulai_real'].strftime("%H:%M:%S") != '00:00:00':
@@ -29,12 +27,41 @@ def adjust_jam_mulai(row):
         # Conditions for other jobs
         if (hour == 7 and minute <= 35) or hour < 7 and row['jam_mulai_real'].strftime("%H:%M:%S") != '00:00:00':
             return pd.Timestamp('07:30').time()
+        
     
     # Default to jam_mulai_real if no condition matches
     return row['jam_mulai_real']
 
 
-def adjust_jam_akhir(time_str):
+def late_hour_pinalty(row):
+    
+    time = row['jam_mulai_real'].strftime('%H:%M')
+    timestamp = pd.to_datetime(row['tanggal'] + ' ' + time)
+    
+    
+    # Convert reference times to timestamps for comparison
+    morning_cutoff = pd.to_datetime(row['tanggal'] + ' 07:06')
+    morning_non_store_cutoff = pd.to_datetime(row['tanggal'] + ' 07:36')
+    afternoon_cutoff = pd.to_datetime(row['tanggal'] + ' 13:00')
+    afternoon_start = pd.to_datetime(row['tanggal'] + ' 13:06')
+    
+    if row['jabatan'].lower() in ['s.helper', 'store helper', 'store']:
+        # Check the conditions for 'store'
+        if morning_cutoff <= timestamp <= afternoon_cutoff:
+            return 1
+        elif timestamp >= afternoon_start:
+            return 1
+    else:
+        # Check the conditions for non-'store'
+        if morning_non_store_cutoff < timestamp < afternoon_cutoff:
+            return 1
+        elif timestamp >= afternoon_start:
+            return 1
+    
+    # No penalty
+    return 0
+
+def rounding_jam_finger(time_str):
     """Replace minutes based on the given conditions."""
     # Split the time into hours and minutes
     hours, mins = time_str.split(':')
@@ -73,10 +100,16 @@ def time_adjustment(attendance_data_df,employee_master_df):
     
     
     att_data_final['jam_mulai'] = att_data_final.apply(adjust_jam_mulai, axis=1)
-
-    att_data_final['jam_akhir'] = att_data_final['jam_akhir_real'].apply(adjust_jam_akhir)   
-
+    #print(att_data_final.info())
+    att_data_final['late_hours'] = att_data_final.apply(late_hour_pinalty,axis=1)
+    
     att_data_final['jam_mulai'] = att_data_final['jam_mulai'].apply(lambda x: x.strftime('%H:%M'))
+    att_data_final['jam_mulai'] = att_data_final['jam_mulai'].apply(rounding_jam_finger)
+
+    att_data_final['jam_akhir'] = att_data_final['jam_akhir_real'].apply(rounding_jam_finger)
+       
+
+    #att_data_final['jam_mulai'] = att_data_final['jam_mulai'].apply(lambda x: x.strftime('%H:%M'))
     #att_data_final['jam_akhir'] = att_data_final['jam_akhir'].apply(lambda x: x.strftime('%H:%M'))
     att_data_final['jam_mulai_real'] = att_data_final['jam_mulai_real'].apply(lambda x: x.strftime('%H:%M'))
     #att_data_final['jam_akhir_real'] = att_data_final['jam_akhir_real'].apply(lambda x: x.strftime('%H:%M'))
@@ -219,7 +252,6 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         # daily_working_hours['hours'] = daily_working_hours['working_hours'].apply(lambda x: int(x[0]))
         # daily_working_hours['minutes'] = daily_working_hours['working_hours'].apply(lambda x: int(x[1]))
         #daily_working_hours = daily_working_hours.drop(columns=['working_hours'])
-
         
         # Include data hari & ubah nama hari menjadi bahasa Indonesia
         daily_working_hours['day'] = daily_working_hours['jam_mulai'].dt.day_name()
@@ -286,8 +318,8 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         
        
         # #get real fingerprint time
-        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real','project']]
-        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real','project']
+        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']]
+        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']
         att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
 
         
@@ -303,17 +335,13 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         
         daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
         
+        daily_working_hours['total_working_hours'] = daily_working_hours['total_working_hours'] - daily_working_hours['late_hours']
+        
         working_hours_output_df = daily_working_hours[['nik','nama','jabatan','project','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
                                                        'keterangan_libur','jam_mulai', 'jam_akhir',
-                                                       'working_hours','break_hours','total_working_hours'
+                                                       'working_hours','late_hours','break_hours','total_working_hours'
                                                        ,'billable_hours'
                                                        ]]
         
-        
-        # working_hours_output_df = daily_working_hours[['nik','nama','tanggal','day', 'is_holiday', 
-        #                                                'keterangan_libur','jam_mulai', 'jam_akhir',
-        #                                                'working_hours','break_hours','total_working_hours'
-        #                                                ,'billable_hours'
-        #                                                ]]
-        
+
         return working_hours_output_df
