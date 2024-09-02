@@ -77,100 +77,101 @@ if login():
         project_report_df = None
         
         if btnSalaryCalc:
+            with st.spinner('Processing...'):
 
             
-            # Generate Jam Kerja
-            attendance_data_adjusted = time_adjustment(attendance_data_df,employee_master_df)
-        
-            working_hours_df = working_hours_calc(attendance_data_adjusted,holidays_date_df,employee_master_df,start_date, end_date)
-
-            st.session_state['working_hours_df'] = working_hours_df
-            # st.markdown("#### Rincian Total Jam Kerja")
-            # st.dataframe(working_hours_df,use_container_width=True)
+                # Generate Jam Kerja
+                attendance_data_adjusted = time_adjustment(attendance_data_df,employee_master_df)
             
-            # Slip bayangan
-            slip_bayangan_df = working_hours_df[['nik','nama','tanggal','jam_mulai','jam_akhir','billable_hours']]
-            slip_bayangan_df.columns = ['nik','nama','tanggal','jam_mulai','jam_akhir','total_jam']
-            slip_bayangan_df.to_csv("temp_data/temp_slip_bayangan.csv",index=None)
-            
+                working_hours_df = working_hours_calc(attendance_data_adjusted,holidays_date_df,employee_master_df,start_date, end_date)
+
+                st.session_state['working_hours_df'] = working_hours_df
+                # st.markdown("#### Rincian Total Jam Kerja")
+                # st.dataframe(working_hours_df,use_container_width=True)
+                
+                # Slip bayangan
+                slip_bayangan_df = working_hours_df[['nik','nama','tanggal','jam_mulai','jam_akhir','billable_hours']]
+                slip_bayangan_df.columns = ['nik','nama','tanggal','jam_mulai','jam_akhir','total_jam']
+                slip_bayangan_df.to_csv("temp_data/temp_slip_bayangan.csv",index=None)
+                
 
 
-            #generate data gaji         
-            detail_salary_df,summary_salary_df = salary_calc(working_hours_df,employee_master_df)
+                #generate data gaji         
+                detail_salary_df,summary_salary_df = salary_calc(working_hours_df,employee_master_df)
 
 
-            # Store the dataframes to display later
-            st.session_state['detail_salary_df'] = detail_salary_df
-            st.session_state['summary_salary_df'] = summary_salary_df
-            # st.markdown("#### Summary Gaji")  
-            # summary_salary_df            
-            
-            # st.markdown("#### Detail Gaji")  
-            # detail_salary_df
-            
-            
-             # generate payslips
-            periode = get_periode(start_date,end_date)
-            path_output = generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode)
-            st.session_state['file_output'] = path_output
-            
-            project_report_df = report_by_project(detail_salary_df)
-            project_report_output = generate_report(project_report_df,periode)
-            st.session_state['project_report_output'] = project_report_output
-            
-            
-            st.session_state['project_report_df'] = project_report_df
+                # Store the dataframes to display later
+                st.session_state['detail_salary_df'] = detail_salary_df
+                st.session_state['summary_salary_df'] = summary_salary_df
+                # st.markdown("#### Summary Gaji")  
+                # summary_salary_df            
+                
+                # st.markdown("#### Detail Gaji")  
+                # detail_salary_df
+                
+                
+                # generate payslips
+                periode = get_periode(start_date,end_date)
+                path_output = generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode)
+                st.session_state['file_output'] = path_output
+                
+                project_report_df = report_by_project(detail_salary_df)
+                project_report_output = generate_report(project_report_df,periode)
+                st.session_state['project_report_output'] = project_report_output
+                
+                
+                st.session_state['project_report_df'] = project_report_df
 
-    # Display the dataframes if they exist
-        if 'working_hours_df' in st.session_state:
-            st.markdown("#### Rincian Total Jam Kerja")
-            st.dataframe(st.session_state['working_hours_df'], use_container_width=True)
+        # Display the dataframes if they exist
+            if 'working_hours_df' in st.session_state:
+                st.markdown("#### Rincian Total Jam Kerja")
+                st.dataframe(st.session_state['working_hours_df'], use_container_width=True)
 
-        if 'summary_salary_df' in st.session_state:
-            st.markdown("#### Summary Gaji")
-            st.dataframe(st.session_state['summary_salary_df'])
+            if 'summary_salary_df' in st.session_state:
+                st.markdown("#### Summary Gaji")
+                st.dataframe(st.session_state['summary_salary_df'])
 
-        if 'detail_salary_df' in st.session_state:
-            st.markdown("#### Detail Gaji")
-            st.dataframe(st.session_state['detail_salary_df'])
-            
-        if 'project_report_df' in st.session_state:
-            st.markdown("#### Project Report")
-            st.dataframe(st.session_state['project_report_df'])
+            if 'detail_salary_df' in st.session_state:
+                st.markdown("#### Detail Gaji")
+                st.dataframe(st.session_state['detail_salary_df'])
+                
+            if 'project_report_df' in st.session_state:
+                st.markdown("#### Project Report")
+                st.dataframe(st.session_state['project_report_df'])
 
-
-        
-        with col_btnDownloadSlip:
-            if 'file_output' in st.session_state and os.path.exists(st.session_state['file_output']):
-                periode = get_periode(start_date, end_date)
-                filename = 'report_' + periode.replace(' ', '_') + ".xlsx"
-
-                with open(st.session_state['file_output'], 'rb') as file:
-                    file_data = file.read()
-
-                st.download_button(
-                    label="Download Slip Gaji",
-                    data=file_data,
-                    file_name=filename,
-                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-        
-        with col_btnDownloadReport:
-            if 'project_report_output' in st.session_state and os.path.exists(st.session_state['project_report_output']):
-                periode = get_periode(start_date, end_date)
-                filename = 'report_project_' + periode.replace(' ', '_') + ".xlsx"
-
-                with open(st.session_state['project_report_output'], 'rb') as file:
-                    file_data = file.read()
-
-                st.download_button(
-                    label="Download Report Project",
-                    data=file_data,
-                    file_name=filename,
-                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
 
             
+            with col_btnDownloadSlip:
+                if 'file_output' in st.session_state and os.path.exists(st.session_state['file_output']):
+                    periode = get_periode(start_date, end_date)
+                    filename = 'report_' + periode.replace(' ', '_') + ".xlsx"
+
+                    with open(st.session_state['file_output'], 'rb') as file:
+                        file_data = file.read()
+
+                    st.download_button(
+                        label="Download Slip Gaji",
+                        data=file_data,
+                        file_name=filename,
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+            
+            with col_btnDownloadReport:
+                if 'project_report_output' in st.session_state and os.path.exists(st.session_state['project_report_output']):
+                    periode = get_periode(start_date, end_date)
+                    filename = 'report_project_' + periode.replace(' ', '_') + ".xlsx"
+
+                    with open(st.session_state['project_report_output'], 'rb') as file:
+                        file_data = file.read()
+
+                    st.download_button(
+                        label="Download Report Project",
+                        data=file_data,
+                        file_name=filename,
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+
+                
 
 
     # with generate_report_tab:
