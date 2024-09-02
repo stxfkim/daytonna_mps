@@ -20,7 +20,7 @@ from funcs.salary_calc import salary_calc
 from funcs.working_hours_calc import working_hours_calc, time_adjustment
 from funcs.tax_calc import tax_calc
 from funcs.gen_payslip import generate_payslip
-from funcs.gen_report import report_by_project
+from funcs.gen_report import report_by_project,generate_report
 from funcs.utils import *
 
 warnings.filterwarnings("ignore")
@@ -58,7 +58,7 @@ if login():
 
     with salary_calc_tab:
 
-        col_btnSalaryCalc, col_btnDownloadReport = st.columns(2)
+        col_btnSalaryCalc, col_btnDownloadSlip, col_btnDownloadReport = st.columns(3)
         is_attendance_empty =  (lambda x: True if x is None else x.empty)(attendance_data_df)
         if is_attendance_empty: st.warning("Data Absensi belum di-upload",icon="⚠️")
         with col_btnSalaryCalc:
@@ -115,6 +115,10 @@ if login():
             st.session_state['file_output'] = path_output
             
             project_report_df = report_by_project(detail_salary_df)
+            project_report_output = generate_report(project_report_df,periode)
+            st.session_state['project_report_output'] = project_report_output
+            
+            
             st.session_state['project_report_df'] = project_report_df
 
     # Display the dataframes if they exist
@@ -136,7 +140,7 @@ if login():
 
 
         
-        with col_btnDownloadReport:
+        with col_btnDownloadSlip:
             if 'file_output' in st.session_state and os.path.exists(st.session_state['file_output']):
                 periode = get_periode(start_date, end_date)
                 filename = 'report_' + periode.replace(' ', '_') + ".xlsx"
@@ -145,7 +149,22 @@ if login():
                     file_data = file.read()
 
                 st.download_button(
-                    label="Download Report",
+                    label="Download Slip Gaji",
+                    data=file_data,
+                    file_name=filename,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+        
+        with col_btnDownloadReport:
+            if 'project_report_output' in st.session_state and os.path.exists(st.session_state['project_report_output']):
+                periode = get_periode(start_date, end_date)
+                filename = 'report_project_' + periode.replace(' ', '_') + ".xlsx"
+
+                with open(st.session_state['project_report_output'], 'rb') as file:
+                    file_data = file.read()
+
+                st.download_button(
+                    label="Download Report Project",
                     data=file_data,
                     file_name=filename,
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

@@ -1,5 +1,14 @@
 import pandas as pd
 import numpy as np
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+import openpyxl
+import streamlit as st
+from pathlib import Path
+from openpyxl import load_workbook
+from openpyxl.styles import NamedStyle
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Alignment
 
 def report_by_project(df):
     # Ensure the 'tanggal' column is in datetime format
@@ -49,6 +58,38 @@ def report_by_project(df):
                          'BASIC/JAM','TOTAL UANG MAKAN', 'TOTAL BASIC', 'SUB TOTAL']]
 
     
-    final_df.to_excel("output/report_project.xlsx",index=0)
+    
     
     return final_df
+
+
+def generate_report(report_df,periode):
+    
+    
+    filename = periode.replace(" ", "_")
+    file_output = Path('output/report_project_'+filename+".xlsx")
+    
+    project_list = report_df['project'].unique()
+    wb = openpyxl.load_workbook(Path('template/template_report.xlsx'))
+    
+    for project in project_list:
+        sheet = wb.copy_worksheet(wb.active)
+        sheet.title = project
+        
+        tmp_detail = report_df[report_df['project']==str(project)]
+        tmp_detail = tmp_detail.drop('project', axis=1)
+        
+        sheet['M1'].value = project
+
+        start_row = 6
+        start_col = 2  # Column B
+        for r_idx, row in enumerate(dataframe_to_rows(tmp_detail, index=False, header=False), start=start_row):
+            for c_idx, value in enumerate(row, start=start_col):
+                sheet.cell(row=r_idx, column=c_idx, value=value)
+    
+    
+    sheet_to_delete = wb['tmp']
+    wb.remove(sheet_to_delete)   
+    wb.save(file_output)
+    
+    return file_output
