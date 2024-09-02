@@ -123,53 +123,53 @@ if login():
                 st.session_state['project_report_df'] = project_report_df
 
         # Display the dataframes if they exist
-            if 'working_hours_df' in st.session_state:
-                st.markdown("#### Rincian Total Jam Kerja")
-                st.dataframe(st.session_state['working_hours_df'], use_container_width=True)
+        if 'working_hours_df' in st.session_state:
+            st.markdown("#### Rincian Total Jam Kerja")
+            st.dataframe(st.session_state['working_hours_df'], use_container_width=True)
 
-            if 'summary_salary_df' in st.session_state:
-                st.markdown("#### Summary Gaji")
-                st.dataframe(st.session_state['summary_salary_df'])
+        if 'summary_salary_df' in st.session_state:
+            st.markdown("#### Summary Gaji")
+            st.dataframe(st.session_state['summary_salary_df'])
 
-            if 'detail_salary_df' in st.session_state:
-                st.markdown("#### Detail Gaji")
-                st.dataframe(st.session_state['detail_salary_df'])
-                
-            if 'project_report_df' in st.session_state:
-                st.markdown("#### Project Report")
-                st.dataframe(st.session_state['project_report_df'])
+        if 'detail_salary_df' in st.session_state:
+            st.markdown("#### Detail Gaji")
+            st.dataframe(st.session_state['detail_salary_df'])
+            
+        if 'project_report_df' in st.session_state:
+            st.markdown("#### Project Report")
+            st.dataframe(st.session_state['project_report_df'])
 
 
             
-            with col_btnDownloadSlip:
-                if 'file_output' in st.session_state and os.path.exists(st.session_state['file_output']):
-                    periode = get_periode(start_date, end_date)
-                    filename = 'report_' + periode.replace(' ', '_') + ".xlsx"
+        with col_btnDownloadSlip:
+            if 'file_output' in st.session_state and os.path.exists(st.session_state['file_output']):
+                periode = get_periode(start_date, end_date)
+                filename = 'report_' + periode.replace(' ', '_') + ".xlsx"
 
-                    with open(st.session_state['file_output'], 'rb') as file:
-                        file_data = file.read()
+                with open(st.session_state['file_output'], 'rb') as file:
+                    file_data = file.read()
 
-                    st.download_button(
-                        label="Download Slip Gaji",
-                        data=file_data,
-                        file_name=filename,
-                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    )
-            
-            with col_btnDownloadReport:
-                if 'project_report_output' in st.session_state and os.path.exists(st.session_state['project_report_output']):
-                    periode = get_periode(start_date, end_date)
-                    filename = 'report_project_' + periode.replace(' ', '_') + ".xlsx"
+                st.download_button(
+                    label="Download Slip Gaji",
+                    data=file_data,
+                    file_name=filename,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+        
+        with col_btnDownloadReport:
+            if 'project_report_output' in st.session_state and os.path.exists(st.session_state['project_report_output']):
+                periode = get_periode(start_date, end_date)
+                filename = 'report_project_' + periode.replace(' ', '_') + ".xlsx"
 
-                    with open(st.session_state['project_report_output'], 'rb') as file:
-                        file_data = file.read()
+                with open(st.session_state['project_report_output'], 'rb') as file:
+                    file_data = file.read()
 
-                    st.download_button(
-                        label="Download Report Project",
-                        data=file_data,
-                        file_name=filename,
-                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    )
+                st.download_button(
+                    label="Download Report Project",
+                    data=file_data,
+                    file_name=filename,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
 
                 
 
