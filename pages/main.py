@@ -86,6 +86,7 @@ if login():
                 working_hours_df = working_hours_calc(attendance_data_adjusted,holidays_date_df,employee_master_df,start_date, end_date)
 
                 st.session_state['working_hours_df'] = working_hours_df
+                #st.session_state['test'] = test
                 # st.markdown("#### Rincian Total Jam Kerja")
                 # st.dataframe(working_hours_df,use_container_width=True)
                 
@@ -101,6 +102,7 @@ if login():
 
 
                 # Store the dataframes to display later
+                
                 st.session_state['detail_salary_df'] = detail_salary_df
                 st.session_state['summary_salary_df'] = summary_salary_df
                 # st.markdown("#### Summary Gaji")  
@@ -122,6 +124,9 @@ if login():
                 
                 st.session_state['project_report_df'] = project_report_df
 
+
+        # if 'test' in st.session_state:
+        #     st.dataframe(st.session_state['test'], use_container_width=True)        
         # Display the dataframes if they exist
         if 'working_hours_df' in st.session_state:
             st.markdown("#### Rincian Total Jam Kerja")

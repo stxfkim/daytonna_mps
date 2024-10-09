@@ -244,9 +244,12 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
 
         # Calculate the working hours per day
         attendance_data_df['tanggal'] = attendance_data_df['jam_mulai'].dt.date
+        
+        
      
         daily_working_hours = attendance_data_df.groupby(['nik', 'nama', 'tanggal','jam_mulai','jam_akhir'])['working_hours'].sum().reset_index()
 
+        
         # Separate the working hours into hours and minutes
         daily_working_hours['working_hours'] = daily_working_hours['working_hours']#.apply(lambda x: divmod(x * 60, 60))
         # daily_working_hours['hours'] = daily_working_hours['working_hours'].apply(lambda x: int(x[0]))
@@ -262,6 +265,7 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         # Pengurangan working_hours-break_hours
         daily_working_hours['total_working_hours'] = daily_working_hours['working_hours'] - daily_working_hours['break_hours']
         
+        
         # convert tanggal type from object into datetime64[ns] before join with holiday_df
         daily_working_hours['tanggal'] = pd.to_datetime(daily_working_hours['tanggal'], format='%Y-%m-%d')
         daily_working_hours = daily_working_hours.merge(
@@ -270,6 +274,8 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
                     right_on="tanggal_libur",
                     how="left"
                 )
+        
+        
         # Fill non holiday on keterangan_libur as Hari Kerja
         # check is_holiday Y or N
         daily_working_hours["is_holiday"] = (
@@ -282,10 +288,14 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
                     columns=["tanggal_libur"]
                 )
         
+        
+        
         # Hitung rate jam normal & jam lembur
         daily_working_hours['billable_hours'] = daily_working_hours.apply(billable_hours_calc, axis=1)
         
         daily_working_hours['billable_hours'] = daily_working_hours.apply(billable_hours_rounding, axis=1)
+        
+
         
         
         # Formatting output data
@@ -322,16 +332,16 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']
         att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
 
-        
 
         daily_working_hours["tanggal"] = pd.to_datetime(daily_working_hours["tanggal"],format='%Y-%m-%d')
         daily_working_hours = pd.merge(daily_working_hours,
                 att_data,
                 left_on=['nik','tanggal'],
                 right_on=['nik_tmp','tanggal_tmp'],
-                how='inner'
+                how='left'
             )
         
+
         
         daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
         
@@ -344,4 +354,4 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
                                                        ]]
         
 
-        return working_hours_output_df
+        return working_hours_output_df#,test
