@@ -174,6 +174,7 @@ def billable_hours_calc(row):
         # jam berikutnya 2x
         else:
             return 7 + 1 * 1.5 + (row['total_working_hours'] - 8) * 2
+            
 
     elif row['day'] == 'Sabtu' and row['is_holiday'] == 'N':
         # Shift Malam & Pagi/Normal Perhitungannya sama
@@ -265,6 +266,29 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         # Pengurangan working_hours-break_hours
         daily_working_hours['total_working_hours'] = daily_working_hours['working_hours'] - daily_working_hours['break_hours']
         
+        ##start here
+            # #get real fingerprint time
+        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']]
+        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']
+        att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
+
+
+        daily_working_hours["tanggal"] = pd.to_datetime(daily_working_hours["tanggal"],format='%Y-%m-%d')
+        daily_working_hours = pd.merge(daily_working_hours,
+                att_data,
+                left_on=['nik','tanggal'],
+                right_on=['nik_tmp','tanggal_tmp'],
+                how='left'
+            )
+        
+
+        
+        daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
+        
+        daily_working_hours['total_working_hours'] = daily_working_hours['total_working_hours'] - daily_working_hours['late_hours']
+        
+        
+        ##end here
         
         # convert tanggal type from object into datetime64[ns] before join with holiday_df
         daily_working_hours['tanggal'] = pd.to_datetime(daily_working_hours['tanggal'], format='%Y-%m-%d')
@@ -287,8 +311,6 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         daily_working_hours = daily_working_hours.drop(
                     columns=["tanggal_libur"]
                 )
-        
-        
         
         # Hitung rate jam normal & jam lembur
         daily_working_hours['billable_hours'] = daily_working_hours.apply(billable_hours_calc, axis=1)
@@ -327,25 +349,7 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
         
         
        
-        # #get real fingerprint time
-        att_data = attendance_data_df[['nik','tanggal','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']]
-        att_data.columns = ['nik_tmp','tanggal_tmp','jabatan','jam_mulai_real','jam_akhir_real','project','late_hours']
-        att_data["tanggal_tmp"] = pd.to_datetime(att_data["tanggal_tmp"],format='%d-%m-%Y')
-
-
-        daily_working_hours["tanggal"] = pd.to_datetime(daily_working_hours["tanggal"],format='%Y-%m-%d')
-        daily_working_hours = pd.merge(daily_working_hours,
-                att_data,
-                left_on=['nik','tanggal'],
-                right_on=['nik_tmp','tanggal_tmp'],
-                how='left'
-            )
-        
-
-        
-        daily_working_hours['tanggal'] = daily_working_hours['tanggal'].dt.strftime('%Y-%m-%d')
-        
-        daily_working_hours['total_working_hours'] = daily_working_hours['total_working_hours'] - daily_working_hours['late_hours']
+    
         
         working_hours_output_df = daily_working_hours[['nik','nama','jabatan','project','tanggal','jam_mulai_real','jam_akhir_real', 'day', 'is_holiday', 
                                                        'keterangan_libur','jam_mulai', 'jam_akhir',
