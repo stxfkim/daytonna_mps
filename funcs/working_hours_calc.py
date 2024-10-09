@@ -312,6 +312,7 @@ def working_hours_calc(attendance_data_df,holidays_date_df,employee_master_df,st
                     columns=["tanggal_libur"]
                 )
         
+        #st.dataframe(daily_working_hours)
         # Hitung rate jam normal & jam lembur
         daily_working_hours['billable_hours'] = daily_working_hours.apply(billable_hours_calc, axis=1)
         
