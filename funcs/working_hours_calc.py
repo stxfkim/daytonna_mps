@@ -40,10 +40,10 @@ def late_hour_pinalty(row):
     
     
     # Convert reference times to timestamps for comparison
-    morning_cutoff = pd.to_datetime(row['tanggal'] + ' 07:06')
-    morning_non_store_cutoff = pd.to_datetime(row['tanggal'] + ' 07:36')
+    morning_cutoff = pd.to_datetime(row['tanggal'] + ' 07:05')
+    morning_non_store_cutoff = pd.to_datetime(row['tanggal'] + ' 07:35')
     afternoon_cutoff = pd.to_datetime(row['tanggal'] + ' 13:00')
-    afternoon_start = pd.to_datetime(row['tanggal'] + ' 13:06')
+    afternoon_start = pd.to_datetime(row['tanggal'] + ' 13:05')
     
     if row['jabatan'].lower() in ['s.helper', 'store helper', 'store']:
         # Check the conditions for 'store'
