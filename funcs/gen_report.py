@@ -33,7 +33,7 @@ def report_by_project(df):
     pivot_df['TOTAL JAM KERJA'] = pivot_df.loc[:, '1':'31'].sum(axis=1)
 
     # Calculate the total working days (TOTAL HARI KERJA)
-    pivot_df['TOTAL HARI KERJA'] = (pivot_df.loc[:, '1':'31'] > 0).sum(axis=1)
+    pivot_df['TOTAL HARI KERJA'] = (pivot_df.loc[:, '1':'31'] > 5).sum(axis=1)
 
     # Calculate meal allowance (UANG MAKAN)
     pivot_df['BASIC/JAM'] = pivot_df['basic_salary']
