@@ -52,9 +52,9 @@ def report_gaji_harian(df):
     
     pivot_df['bpjs_dna'] = pivot_df['jumlah_gaji'].apply(
         lambda x: 0 if x <= 1000000 else
-                  165400 if x <= 3000000 else
-                  163370 if x <= 5000000 else
-                  237176.35
+                  74000 if x <= 3000000 else
+                  114700 if x <= 5000000 else
+                  166518.50
     )
     
     final_df = pivot_df[['nama', 'jabatan'] + all_days + ['total_jam_kerja','total_hari_kerja','uang_makan',

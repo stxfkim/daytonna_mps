@@ -191,7 +191,7 @@ def billable_hours_calc(row):
         # 7 jam pertama 2x
         if row['total_working_hours'] <= 7.5:
             return row['total_working_hours'] * 2
-        # 1 jam berikutnya 3x
+        # 1 jam berikutnya 3xa
         elif row['total_working_hours'] <= 8:
             return 7 * 2 + (row['total_working_hours'] - 7) * 3
         # jam berikutnya 4x
