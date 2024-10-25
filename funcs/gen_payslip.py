@@ -10,6 +10,56 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
 
 
+
+def report_gaji_harian(df):
+    # Ensure the 'tanggal' column is in datetime format
+    df['tanggal'] = pd.to_datetime(df['tanggal'], format='%Y-%m-%d')
+
+    # Group by 'Project', 'nama', and 'jabatan' and pivot the table
+    pivot_df = df.pivot_table(index=['nama', 'jabatan','uang_makan','basic_salary','tax_deduction','bpjstk_deduction'], 
+                              columns=df['tanggal'].dt.day, 
+                              values='billable_hours', 
+                              aggfunc='sum').reset_index()
+    
+    # Create a list of all days (1 to 31)
+    all_days = [str(i) for i in range(1, 32)]
+    
+    # Reindex the pivot table to ensure all days are present
+    pivot_df = pivot_df.reindex(columns=['nama', 'jabatan','uang_makan','basic_salary','tax_deduction','bpjstk_deduction'] + list(range(1, 32)), fill_value=0)
+    
+    # Rename columns
+    pivot_df.columns = ['nama', 'jabatan','uang_makan','basic_salary','potongan_pajak','potongan_bpjstk'] + all_days
+
+    #nama, jabatan, days, total jam kerja,total hari kerja, uang_makan,total uang makan, basic salary,
+    #jumlah gaji(total basic),
+    # pendapatan kotor (subtotal), potongan spatu/helm(isi 0)
+    #potongan pph (tax_deduction),
+    #subtotal ()
+    #bpjs deduction
+
+    pivot_df['total_jam_kerja'] = pivot_df.loc[:, '1':'31'].sum(axis=1)
+    pivot_df['total_hari_kerja'] = (pivot_df.loc[:, '1':'31'] > 5).sum(axis=1)
+    pivot_df['total_uang_makan'] = pivot_df['uang_makan'] * pivot_df['total_hari_kerja']
+    pivot_df['jumlah_gaji'] = pivot_df['total_jam_kerja'] * pivot_df['basic_salary']
+    pivot_df['pendapatan_kotor'] = pivot_df['jumlah_gaji'] + pivot_df['total_uang_makan']
+    pivot_df['potongan_sepatu_helm'] = 0
+    pivot_df['kasbon'] = 0
+    pivot_df['tambahan_lain'] = 0
+    
+    pivot_df['tmp_plus'] = (pivot_df['jumlah_gaji']+pivot_df['total_uang_makan']+pivot_df['tambahan_lain'])
+    pivot_df['tmp_minus'] = (pivot_df['potongan_bpjstk']+pivot_df['potongan_sepatu_helm']+pivot_df['potongan_pajak']+pivot_df['kasbon'])
+    pivot_df['subtotal'] = pivot_df['tmp_plus']-pivot_df['tmp_minus']
+    pivot_df['bpjs_dna'] = pivot_df['jumlah_gaji']*0.02
+    
+    final_df = pivot_df[['nama', 'jabatan'] + all_days + ['total_jam_kerja','total_hari_kerja','uang_makan',
+                                                          'total_uang_makan','basic_salary','jumlah_gaji',
+                                                          'pendapatan_kotor','potongan_sepatu_helm',
+                                                          'potongan_pajak','kasbon','tambahan_lain','potongan_bpjstk',
+                                                          'subtotal']]
+    
+    
+    return final_df
+
 def generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode):
     
     working_hours_df['sheet_name'] = working_hours_df['nik'] + "_" +working_hours_df["nama"].replace(
@@ -24,7 +74,6 @@ def generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode
 
     wb = openpyxl.load_workbook(Path('template/template_slipgaji.xlsx'))
     sheetname_list = summary_salary_df['sheet_name'].unique()
-    
     
     filename = periode.replace(" ", "_")
     
@@ -140,19 +189,31 @@ def generate_payslip(working_hours_df,summary_salary_df,detail_salary_df,periode
     wb._sheets.insert(1, working_hours_sheet)
     
 
-    # Detail Perhitungan Gaji
-    wb.create_sheet('Detail Perhitungan Gaji')
-    salary_detail_sheet = wb['Detail Perhitungan Gaji']
+    # # Detail Perhitungan Gaji
+    # wb.create_sheet('Detail Perhitungan Gaji')
+    # salary_detail_sheet = wb['Detail Perhitungan Gaji']
     
     
-    for r_idx, row in enumerate(dataframe_to_rows(detail_salary_df, index=False, header=True), start=1):
-        for c_idx, value in enumerate(row, start=1):
-            salary_detail_sheet.cell(row=r_idx, column=c_idx, value=value)
+    # for r_idx, row in enumerate(dataframe_to_rows(detail_salary_df, index=False, header=True), start=1):
+    #     for c_idx, value in enumerate(row, start=1):
+    #         salary_detail_sheet.cell(row=r_idx, column=c_idx, value=value)
     
-    wb.remove(salary_detail_sheet)
-    wb._sheets.insert(2, salary_detail_sheet)
+    # wb.remove(salary_detail_sheet)
+    # wb._sheets.insert(2, salary_detail_sheet)
     
-
+    
+    #Gaji Harian Template
+    gaji_harian_sheet = wb['tmp2']
+    
+    gaji_harian_df = report_gaji_harian(detail_salary_df)
+    for r_idx, row in enumerate(dataframe_to_rows(gaji_harian_df, index=False, header=False), start=8):
+        for c_idx, value in enumerate(row, start=2):
+            gaji_harian_sheet.cell(row=r_idx, column=c_idx, value=value)
+    gaji_harian_sheet.title = 'Gaji Harian'
+    wb.remove(gaji_harian_sheet)
+    wb._sheets.insert(1, gaji_harian_sheet)
+    
+    
     wb.save(file_output)
     
     return file_output
