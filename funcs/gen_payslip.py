@@ -49,13 +49,19 @@ def report_gaji_harian(df):
     pivot_df['tmp_plus'] = (pivot_df['jumlah_gaji']+pivot_df['total_uang_makan']+pivot_df['tambahan_lain'])
     pivot_df['tmp_minus'] = (pivot_df['potongan_bpjstk']+pivot_df['potongan_sepatu_helm']+pivot_df['potongan_pajak']+pivot_df['kasbon'])
     pivot_df['subtotal'] = pivot_df['tmp_plus']-pivot_df['tmp_minus']
-    pivot_df['bpjs_dna'] = pivot_df['jumlah_gaji']*0.02
+    
+    pivot_df['bpjs_dna'] = pivot_df['jumlah_gaji'].apply(
+        lambda x: 0 if x <= 1000000 else
+                  165400 if x <= 3000000 else
+                  163370 if x <= 5000000 else
+                  237176.35
+    )
     
     final_df = pivot_df[['nama', 'jabatan'] + all_days + ['total_jam_kerja','total_hari_kerja','uang_makan',
                                                           'total_uang_makan','basic_salary','jumlah_gaji',
                                                           'pendapatan_kotor','potongan_sepatu_helm',
                                                           'potongan_pajak','kasbon','tambahan_lain','potongan_bpjstk',
-                                                          'subtotal']]
+                                                          'subtotal','bpjs_dna']]
     
     
     return final_df
